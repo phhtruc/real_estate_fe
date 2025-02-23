@@ -32,8 +32,13 @@
           <ul class="navbar-nav ml-auto navbar-list">
             <li class="nav-item">
               <a class="search-toggle iq-waves-effect" href="#"><i class="ri-search-line"></i></a>
-              <form action="#" class="search-box">
-                <input type="text" class="text search-input" placeholder="Tên bất động sản" />
+              <form @submit.prevent="searchProperty" class="search-box">
+                <input
+                  type="text"
+                  class="text search-input"
+                  placeholder="Tên bất động sản"
+                  v-model="searchQuery"
+                />
               </form>
             </li>
 
@@ -55,5 +60,18 @@
     </div>
   </div>
 </template>
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const searchQuery = ref('')
+const router = useRouter()
+
+const searchProperty = () => {
+  if (searchQuery.value.trim()) {
+    router.push({ path: '/', query: { search: searchQuery.value } })
+  }
+}
+</script>
 
 

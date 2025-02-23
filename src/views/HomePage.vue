@@ -5,6 +5,7 @@ import { useRouter, useRoute } from 'vue-router'
 
 const rootAPI = import.meta.env.VITE_APP_ROOT_API
 const router = useRouter()
+const route = useRoute()
 const showSearch = ref(false)
 const properties = ref([])
 const isModalVisible = ref(false)
@@ -14,6 +15,7 @@ const currentPage = ref(1)
 const perPage = ref(10)
 const totalRows = ref(0)
 const propertyTypes = ref([])
+const searchTerm = ref(route.query.search || '')
 
 const province = ref('')
 const selectedPropertyType = ref('')
@@ -47,9 +49,6 @@ const toggleSearch = () => {
   showSearch.value = !showSearch.value
 }
 
-const searchProperties = () => {
-  console.log('Tìm kiếm bất động sản với từ khóa và loại BĐS đã chọn')
-}
 
 const filterPrices = (order) => {
   filterPrice(order)
@@ -72,11 +71,6 @@ const fetchProperties = async () => {
   }
 }
 
-const pageChanged = (page) => {
-  currentPage.value = page
-  fetchProperties()
-}
-
 watch(currentPage, () => {
   fetchProperties()
 })
@@ -92,10 +86,6 @@ const viewProperty = (id) => {
 
 const updateProperty = (id) => {
   router.push({ name: 'UpdateProperty', params: { id } })
-}
-
-const deleteCourse = () => {
-  isModalVisible.value = true
 }
 
 const handleDelete = async () => {
@@ -130,6 +120,23 @@ const filterPrice = async (sortPrice) => {
   }
 }
 
+const filterNameProperty = async () => {
+  if (!searchTerm.value) return
+  try {
+    console.log(searchTerm.value)
+    const response = await axios.get(`${rootAPI}/properties/search`, {
+      params: {
+        title: searchTerm.value,
+        page: currentPage.value,
+        pageSize: perPage.value,
+      },
+    })
+    properties.value = response.data.data.items
+  } catch (error) {
+    console.error("Lỗi khi lấy dữ liệu:", error)
+  }
+}
+
 const filterProperties = async () => {
   let minPrice = null,
     maxPrice = null
@@ -149,7 +156,7 @@ const filterProperties = async () => {
   }
 
   const filters = {
-    province: province.value,
+    address: province.value,
     propertyType: selectedPropertyType.value,
     minPrice: minPrice,
     maxPrice: maxPrice,
@@ -189,9 +196,15 @@ const fetchPropertyType = async () => {
   }
 }
 
+watch(() => route.query.search, (newSearch) => {
+  searchTerm.value = newSearch || ''
+  filterNameProperty()
+})
+
 onMounted(async () => {
   await fetchProperties()
   await fetchPropertyType()
+  await filterNameProperty()
 })
 </script>
 
